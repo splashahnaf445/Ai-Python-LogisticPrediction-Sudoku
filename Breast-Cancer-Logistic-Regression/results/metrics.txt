@@ -1,0 +1,21 @@
+[Task 1] Loading raw WDBC dataset and executing 70/15/15 split...
+Total samples: 569 | Total features: 30
+Train size: 398 | Val size: 85 | Test size: 86
+
+[Task 2 & 3] Training models across learning rates...
+
+==============================================
+lr           | val_acc    | final train loss
+----------------------------------------------
+0.1          |   96.47%   | 0.0105          
+0.01         |   95.29%   | 0.0247          
+0.001        |   96.47%   | 0.0451          
+0.0001       |   95.29%   | 0.0759          
+==============================================
+
+Best Learning Rate: 0.1 (Validation Accuracy: 96.47%)
+Final Test Accuracy (lr=0.1, max_iter=500): 93.02%
+Confusion matrix (malignant = positive): TP=28 TN=52 FP=3 FN=3
+Malignant precision=0.9032 recall=0.9032 F1=0.9032
+
+Saved plot to results/train_loss_vs_epoch.png
