@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>IntelliSudoku</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef1f8;
+      --paper: #fff;
+      --ink: #14234a;
+      --user: #2a5bd7;
+      --line: #c9d2e4;
+      --box: #14234a;
+      --sel: #ffd9b0;
+      --peer: #e8edf7;
+      --same: #cfdcf5;
+      --bad: #d6334a;
+      --badbg: #fde3e7;
+      --mut: #5b6580;
+      --acc: #e8751a;
+      --btn: #14234a;
+      --btnt: #fff;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0a1226;
+        --paper: #14203d;
+        --ink: #e8ecf8;
+        --user: #8fb0ff;
+        --line: #2c3a63;
+        --box: #9fb0dd;
+        --sel: #7a4a14;
+        --peer: #1c294d;
+        --same: #2b3c78;
+        --bad: #ff7a8c;
+        --badbg: #4a1f2b;
+        --mut: #9aa6c9;
+        --acc: #ff9a4a;
+        --btn: #e8ecf8;
+        --btnt: #0a1226
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0a1226;
+      --paper: #14203d;
+      --ink: #e8ecf8;
+      --user: #8fb0ff;
+      --line: #2c3a63;
+      --box: #9fb0dd;
+      --sel: #7a4a14;
+      --peer: #1c294d;
+      --same: #2b3c78;
+      --bad: #ff7a8c;
+      --badbg: #4a1f2b;
+      --mut: #9aa6c9;
+      --acc: #ff9a4a;
+      --btn: #e8ecf8;
+      --btnt: #0a1226
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Bricolage Grotesque", system-ui, sans-serif;
+      padding: 16px 12px 40px;
+      min-height: 100%
+    }
+
+    button,
+    select {
+      font: inherit;
+      color: inherit
+    }
+
+    .top {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -.02em
+    }
+
+    h1 b {
+      color: var(--acc)
+    }
+
+    nav {
+      display: flex;
+      gap: 4px
+    }
+
+    nav a {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--mut);
+      text-decoration: none
+    }
+
+    nav a.on {
+      background: var(--btn);
+      color: var(--btnt)
+    }
+
+    #play {
+      max-width: 460px;
+      margin: 16px auto 0
+    }
+
+    #results {
+      max-width: 960px;
+      margin: 16px auto 0;
+      display: none
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 4px
+    }
+
+    .seg button {
+      border: 0;
+      background: none;
+      border-radius: 7px;
+      padding: 8px 0;
+      font-weight: 600;
+      cursor: pointer
+    }
+
+    .seg button.on {
+      background: var(--acc);
+      color: #fff
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0 8px;
+      color: var(--mut);
+      font-weight: 600;
+      font-size: .92rem
+    }
+
+    #timer {
+      font-variant-numeric: tabular-nums
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      background: var(--paper);
+      border: 3px solid var(--box);
+      border-radius: 6px;
+      aspect-ratio: 1;
+      overflow: hidden
+    }
+
+    .c {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+      font-size: clamp(1.1rem, 6vw, 1.7rem);
+      font-weight: 600;
+      color: var(--user);
+      padding: 0;
+      cursor: pointer;
+      min-width: 0
+    }
+
+    .c.given {
+      color: var(--ink);
+      font-weight: 800
+    }
+
+    .c.cb {
+      border-right: 2px solid var(--box)
+    }
+
+    .c.rb {
+      border-bottom: 2px solid var(--box)
+    }
+
+    .c.peer {
+      background: var(--peer)
+    }
+
+    .c.same {
+      background: var(--same)
+    }
+
+    .c.sel {
+      background: var(--sel)
+    }
+
+    .c.bad {
+      background: var(--badbg);
+      color: var(--bad)
+    }
+
+    .c:focus-visible {
+      outline: 3px solid var(--acc);
+      outline-offset: -3px
+    }
+
+    .n {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      height: 100%;
+      font-size: clamp(.5rem, 2.4vw, .7rem);
+      font-weight: 600;
+      color: var(--mut);
+      line-height: 1;
+      padding: 2px;
+      place-items: center
+    }
+
+    #pad {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 6px;
+      margin: 14px 0 10px
+    }
+
+    #pad button,
+    .act button {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 0;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer
+    }
+
+    #pad button:disabled {
+      opacity: .3;
+      cursor: default
+    }
+
+    .act {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px
+    }
+
+    .act button {
+      font-size: .92rem;
+      padding: 10px 4px
+    }
+
+    .act button.on,
+    .act button.pri {
+      background: var(--btn);
+      color: var(--btnt)
+    }
+
+    #msg {
+      min-height: 1.5em;
+      margin-top: 12px;
+      text-align: center;
+      font-weight: 600
+    }
+
+    #msg.win {
+      font-size: 1.2rem;
+      color: var(--acc)
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      margin: 4px 0 4px
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      margin: 0 0 4px
+    }
+
+    .note {
+      color: var(--mut);
+      font-size: .88rem;
+      margin: 0 0 12px;
+      max-width: 70ch
+    }
+
+    .wrap {
+      overflow-x: auto
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: .9rem;
+      font-variant-numeric: tabular-nums
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap
+    }
+
+    th:first-child,
+    td:first-child,
+    th.l,
+    td.l {
+      text-align: left
+    }
+
+    th {
+      color: var(--mut);
+      font-weight: 600
+    }
+
+    tr.win td {
+      font-weight: 700
+    }
+
+    .best {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px
+    }
+
+    .best div {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: .9rem
+    }
+
+    .best strong {
+      display: block;
+      margin-bottom: 4px
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      margin: 0 0 14px;
+      font-size: .88rem;
+      font-weight: 600
+    }
+
+    .legend i,
+    .sw {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: -1px
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 16px
+    }
+
+    @media (max-width:480px) {
+      .grid2 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .grp {
+      display: grid;
+      grid-template-columns: 62px 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center
+    }
+
+    .gl {
+      font-weight: 700;
+      font-size: .9rem
+    }
+
+    .br {
+      display: grid;
+      grid-template-columns: 1fr 70px;
+      gap: 8px;
+      align-items: center;
+      margin: 2px 0
+    }
+
+    .tr {
+      height: 12px;
+      background: var(--peer);
+      border-radius: 6px;
+      overflow: hidden
+    }
+
+    .tr i {
+      display: block;
+      height: 100%;
+      border-radius: 6px
+    }
+
+    .br span {
+      font-size: .78rem;
+      color: var(--mut);
+      text-align: right;
+      font-variant-numeric: tabular-nums
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top">
+    <h1>Intelli<b>Sudoku</b></h1>
+    <nav><a href="#play" id="nplay">Play</a><a href="#results" id="nres">Results</a></nav>
+  </div>
+
+  <main id="play">
+    <div class="seg" id="seg"></div>
+    <div class="meta"><span id="info"></span><span id="timer">0:00</span></div>
+    <div id="board" role="grid" aria-label="Sudoku board"></div>
+    <div id="pad"></div>
+    <div class="act">
+      <button id="notes">Notes: off</button><button id="erase">Erase</button><button id="hint">Hint</button><button
+        id="new" class="pri">New puzzle</button>
+    </div>
+    <div id="msg" aria-live="polite"></div>
+  </main>
+
+  <main id="results"></main>
+
+  <script>
+    let S = [], O = [];
+    const $ = s => document.querySelector(s);
+    const DIFFS = ['easy', 'medium', 'hard', 'expert'], NAMES = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' };
+    let ALG = [], COL = ['#8fb3e6', '#5f8fd6', '#3d6fc0', '#9a7be0', '#f28a1e'];
+    let diff = 'medium', sol, g, giv, nt, sel = -1, mist = 0, notesOn = false, secs = 0, tmr, done = false; const played = {};
+
+    /* ---------- Play ---------- */
+    async function start() {
+      let p;
+      try { p = await (await fetch('/api/puzzle?difficulty=' + diff + '&seen=' + [...(played[diff] || [])].join(','))).json() }
+      catch (e) { msg("Cannot reach the Python server. Start it with: python intellisudoku.py serve"); return }
+      (played[diff] || (played[diff] = new Set())).add(String(p.id));
+      sol = [...p.solution].map(Number); g = [...p.puzzle].map(Number); giv = g.map(x => x > 0);
+      nt = Array.from({ length: 81 }, () => new Set()); sel = -1; mist = 0; secs = 0; done = false;
+      $('#info').textContent = 'Puzzle #' + p.id + ' from the ' + diff + ' set, ' + p.clues + ' clues. Solved by Python in ' + p.ms + ' ms';
+      clearInterval(tmr); $('#timer').textContent = '0:00';
+      tmr = setInterval(() => { if (!done) { secs++; $('#timer').textContent = (secs / 60 | 0) + ':' + String(secs % 60).padStart(2, '0') } }, 1000);
+      msg(''); draw();
+    }
+    function msg(t, w) { const m = $('#msg'); m.textContent = t; m.className = w ? 'win' : '' }
+    function conflict(i) {
+      const v = g[i]; if (!v) return false; const r = i / 9 | 0, c = i % 9, br = r - r % 3, bc = c - c % 3;
+      for (let k = 0; k < 9; k++) {
+        const a = r * 9 + k, b = k * 9 + c, d = (br + (k / 3 | 0)) * 9 + bc + k % 3;
+        if ((a !== i && g[a] === v) || (b !== i && g[b] === v) || (d !== i && g[d] === v)) return true
+      } return false
+    }
+    function draw() {
+      document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b.dataset.d === diff));
+      const B = $('#board'); B.innerHTML = ''; const sv = sel >= 0 ? g[sel] : 0;
+      for (let i = 0; i < 81; i++) {
+        const r = i / 9 | 0, c = i % 9, b = document.createElement('button');
+        b.className = 'c' + (giv[i] ? ' given' : '') + (c % 3 === 2 && c < 8 ? ' cb' : '') + (r % 3 === 2 && r < 8 ? ' rb' : '');
+        if (sel >= 0) {
+          const sr = sel / 9 | 0, sc = sel % 9;
+          if (i === sel) b.classList.add('sel');
+          else if (sv && g[i] === sv) b.classList.add('same');
+          else if (r === sr || c === sc || ((r / 3 | 0) === (sr / 3 | 0) && (c / 3 | 0) === (sc / 3 | 0))) b.classList.add('peer')
+        }
+        if (!giv[i] && g[i] && g[i] !== sol[i] && conflict(i)) b.classList.add('bad');
+        b.setAttribute('aria-label', 'Row ' + (r + 1) + ' column ' + (c + 1) + (g[i] ? ', ' + g[i] : ', empty'));
+        if (g[i]) b.textContent = g[i];
+        else if (nt[i].size) {
+          const d = document.createElement('div'); d.className = 'n';
+          for (let v = 1; v <= 9; v++) { const s = document.createElement('span'); s.textContent = nt[i].has(v) ? v : ''; d.appendChild(s) } b.appendChild(d)
+        }
+        b.onclick = () => { sel = i; draw() }; B.appendChild(b)
+      }
+      const P = $('#pad'); P.innerHTML = '';
+      for (let v = 1; v <= 9; v++) { const b = document.createElement('button'); b.textContent = v; b.disabled = g.filter(x => x === v).length >= 9 || done; b.onclick = () => put(v); P.appendChild(b) }
+      $('#notes').textContent = 'Notes: ' + (notesOn ? 'on' : 'off'); $('#notes').classList.toggle('on', notesOn);
+    }
+    function finish() { done = true; msg('Solved in ' + $('#timer').textContent + ' with ' + mist + ' mistake' + (mist === 1 ? '' : 's') + '.', 1) }
+    function put(v) {
+      if (sel < 0 || giv[sel] || done) return;
+      if (notesOn && !g[sel]) { nt[sel].has(v) ? nt[sel].delete(v) : nt[sel].add(v); draw(); return }
+      if (g[sel] === v) { g[sel] = 0; draw(); return }
+      g[sel] = v; nt[sel].clear();
+      if (v !== sol[sel]) { mist++; msg('That number does not belong here. Try another.') }
+      else {
+        msg(''); const r = sel / 9 | 0, c = sel % 9, br = r - r % 3, bc = c - c % 3;
+        for (let k = 0; k < 9; k++) [r * 9 + k, k * 9 + c, (br + (k / 3 | 0)) * 9 + bc + k % 3].forEach(j => nt[j].delete(v))
+      }
+      if (g.every((x, i) => x === sol[i])) finish();
+      draw();
+    }
+    function erase() { if (sel < 0 || giv[sel] || done) return; g[sel] = 0; nt[sel].clear(); draw() }
+    function hint() {
+      if (done) return; let i = sel;
+      if (i < 0 || giv[i] || g[i] === sol[i]) { const e = g.map((x, k) => x !== sol[k] ? k : -1).filter(k => k >= 0); if (!e.length) return; i = e[Math.random() * e.length | 0] }
+      sel = i; g[i] = sol[i]; giv[i] = true; nt[i].clear(); msg('Hint placed.');
+      if (g.every((x, k) => x === sol[k])) finish(); draw();
+    }
+    Object.keys(NAMES).forEach(d => { const b = document.createElement('button'); b.textContent = NAMES[d]; b.dataset.d = d; b.onclick = () => { diff = d; start() }; $('#seg').appendChild(b) });
+    $('#new').onclick = start; $('#erase').onclick = erase; $('#hint').onclick = hint;
+    $('#notes').onclick = () => { notesOn = !notesOn; draw() };
+    document.addEventListener('keydown', e => {
+      if ($('#play').style.display === 'none') return;
+      if (e.key >= '1' && e.key <= '9') put(+e.key);
+      else if (e.key === 'Backspace' || e.key === 'Delete') erase();
+      else if (e.key === 'n') $('#notes').click();
+      else if (e.key.startsWith('Arrow') && sel >= 0) {
+        const r = sel / 9 | 0, c = sel % 9, d = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+        if ((e.key === 'ArrowUp' && r > 0) || (e.key === 'ArrowDown' && r < 8) || (e.key === 'ArrowLeft' && c > 0) || (e.key === 'ArrowRight' && c < 8)) { sel += d; draw(); $('#board').children[sel].focus(); e.preventDefault() }
+      }
+    });
+
+    /* ---------- Results ---------- */
+    const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: n < 10 ? 2 : 0 });
+    const fms = n => n < 1 ? n.toFixed(3) : n < 10 ? n.toFixed(2) : n.toFixed(1);
+    const fsr = n => n.toFixed(n === 100 ? 0 : 1) + '%';
+    function chart(title, key, f, mode, note) {
+      const max = Math.max(...S.map(r => r[key])); let rows = '';
+      DIFFS.forEach(d => {
+        rows += `<div class="grp"><div class="gl">${NAMES[d]}</div><div>`;
+        S.filter(r => r.d === d).forEach(r => {
+          const w = mode === 'sr' ? Math.max(2, (r[key] - 95) / 5 * 100) : (r[key] > 0 ? Math.max(1.5, Math.log10(1 + r[key]) / Math.log10(1 + max) * 100) : 0);
+          rows += `<div class="br"><div class="tr"><i style="width:${w}%;background:${COL[ALG.indexOf(r.a)]}"></i></div><span>${f(r[key])}</span></div>`
+        });
+        rows += '</div></div>'
+      });
+      return `<section class="card"><h3>${title}</h3><p class="note">${note}</p>${rows}</section>`
+    }
+    async function results() {
+      try { ({ S, O } = await (await fetch('/api/results')).json()) }
+      catch (e) { $('#results').innerHTML = '<p class="note">Cannot reach the Python server. Start it with: python intellisudoku.py serve</p>'; return }
+      ALG = [...new Set(S.map(r => r.a))];
+      const x0 = O[0].nodes;
+      const best = DIFFS.map(d => {
+        const R = S.filter(r => r.d === d);
+        const bn = R.reduce((a, b) => b.nodes < a.nodes ? b : a), bt = R.reduce((a, b) => b.ms < a.ms ? b : a);
+        return `<div><strong>${NAMES[d]}</strong>Fewest nodes: ${bn.a} (${fmt(bn.nodes)})<br>Fastest: ${bt.a} (${fms(bt.ms)} ms)</div>`
+      }).join('');
+      $('#results').innerHTML = `
+  <h2>Algorithm comparison</h2>
+  <p class="note">Five solvers ran on the same ${O[0].n.toLocaleString()} puzzles (250 per difficulty). Averages cover solved puzzles. A puzzle counts as failed if a solver exceeds 500,000 nodes.</p>
+  <section class="card"><h3>Overall, all difficulties</h3><div class="wrap"><table><thead><tr><th>Algorithm</th><th>Puzzles</th><th>Avg time (ms)</th><th>Avg nodes</th><th>Avg backtracks</th><th>Success rate</th><th>Nodes vs basic</th></tr></thead><tbody>
+  ${O.map((r, i) => `<tr><td><span class="sw" style="background:${COL[i]}"></span>${r.a}</td><td>${r.n}</td><td>${fms(r.ms)}</td><td>${fmt(r.nodes)}</td><td>${fmt(r.bt)}</td><td>${fsr(r.sr)}</td><td>${i ? (x0 / r.nodes).toFixed(1) + 'x fewer' : 'baseline'}</td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="card"><h3>Best per difficulty</h3><div class="best">${best}</div></section>
+  <div class="legend">${ALG.map((a, i) => `<span><i style="background:${COL[i]}"></i>${a}</span>`).join('')}</div>
+  <div class="grid2">
+  ${chart('Average solving time (ms)', 'ms', fms, 'log', 'Lower is better. Log scale.')}
+  ${chart('Average search nodes explored', 'nodes', fmt, 'log', 'Lower is better. Log scale; no bar means zero nodes.')}
+  ${chart('Average backtracks', 'bt', fmt, 'log', 'Lower is better. Log scale; no bar means zero backtracks.')}
+  ${chart('Success rate', 'sr', fsr, 'sr', 'Higher is better. Bars start at 95%.')}
+  </div>
+  <section class="card"><h3>Full results</h3><div class="wrap"><table><thead><tr><th>Algorithm</th><th class="l">Difficulty</th><th>Puzzles</th><th>Avg time (ms)</th><th>Avg nodes</th><th>Median nodes</th><th>Avg backtracks</th><th>Success rate</th></tr></thead><tbody>
+  ${S.map(r => `<tr><td>${r.a}</td><td class="l">${NAMES[r.d]}</td><td>${r.n}</td><td>${fms(r.ms)}</td><td>${fmt(r.nodes)}</td><td>${fmt(r.med)}</td><td>${fmt(r.bt)}</td><td>${fsr(r.sr)}</td></tr>`).join('')}
+  </tbody></table></div></section>
+  <p class="note">Nodes are value assignments tried; backtracks are assignments undone. For AC-3, cells filled in by propagation are not counted as nodes.</p>`;
+    }
+
+    /* ---------- Routing ---------- */
+    function route() {
+      const r = location.hash === '#results';
+      $('#play').style.display = r ? 'none' : 'block'; $('#results').style.display = r ? 'block' : 'none';
+      $('#nplay').classList.toggle('on', !r); $('#nres').classList.toggle('on', r);
+    }
+    window.addEventListener('hashchange', route);
+    results(); route(); start();
+  </script>
+</body>
+
+</html>
